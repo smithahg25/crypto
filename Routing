@@ -1,0 +1,71 @@
+router3-
+172.16.0.0   10.0.0.3
+10.1.1.0    10.0.0.3
+router 4-
+192.168.1.0  172.16.0.1
+10.0.0.0   172.16.0.1
+router 5-
+192.168.1.0  10.0.0.2
+10.1.1.0   172.16.0.2
+
+
+
+Router> Enable
+Router# Configure t
+Router(config)#
+license boot module c2900 technology-package securityk9
+Router(config)# do write
+Router(config)#exit
+Router#sh version
+
+
+at Router3
+access-list 130 permit ip 192.168.1.0  0.0.0.255 10.1.1.0 0.0.0.255 
+
+at Router4
+access-list 130 permit ip 10.1.1.0 0.0.0.255 192.168.1.0 0.0.0.255
+
+
+Router(config)#crypto isakmp policy 10 
+
+2 Router(config-isakmp)#encryption aes 256
+
+3 Router(config-isakmp)#authentication pre-share
+
+4 Router(config-isakmp)#group 5
+
+5 Router(config-isakmp)#exit
+
+6 Router(config)#crypto isakmp key cisco123 address 172.16.0.2 (this for R3)
+                                                                   or   
+6 Router(config)#crypto isakmp key cisco123 address 10.0.0.2 (this for R4)
+
+
+7 Router(config)#do write
+Building configuration...
+
+
+
+Router(config)#crypto ipsec transform-set VPN-SET esp-aes esp-sha-hmac
+
+Router(config)#crypto map VPN-MAP 10 ipsec-isakmp
+% NOTE: This new crypto map will remain disabled until a peer
+and a valid access list have been configured.
+Router(config-crypto-map)#description THIS VPN CONNECTS SITE B BRANCH (Router-3)
+or
+Router(config-crypto-map)#description THIS VPN CONNECTS SITE A BRANCH (R-4
+
+
+
+Router(config-crypto-map)#set peer 172.16.0.2 (R3)
+   or
+Router(config-crypto-map)#set peer 10.0.0.2 (R4)
+
+
+Router(config-crypto-map)#set transform-set VPN-SET
+Router(config-crypto-map)#match address 130
+Router(config-crypto-map)#exit
+Router(config)#do write
+Building configuration...
+[OK]
+Router(config)#do sh start
